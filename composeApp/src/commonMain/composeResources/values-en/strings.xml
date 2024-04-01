@@ -1,0 +1,38 @@
+<resources>
+    <!-- MainScreen -->
+    <string name="main_top_bar_title">Start a new day</string>
+    <string name="main_add_new_plan_content_desc">Add a new plan</string>
+    <string name="main_create_plan_success">Plan created successfully</string>
+
+    <!-- NewPlanScreen -->
+    <string name="new_top_bar_title">New Plan</string>
+    <string name="new_close_screen_content_desc">Close the current screen</string>
+    <string name="new_label_plan_title">Plan title</string>
+    <string name="new_label_plan_desc">Plan description</string>
+    <string name="new_text_create_plan">Create plan</string>
+    <string name="new_text_priority">Priority: </string>
+    <string name="new_text_blue_priority">Not important and not urgent</string>
+    <string name="new_text_green_priority">Important but not urgent</string>
+    <string name="new_text_yellow_priority">Not important but urgent</string>
+    <string name="new_text_red_priority">Important and urgent</string>
+    <string name="new_toast_title_not_null">Title cannot be empty</string>
+    <string name="new_toast_start_date_not_null">Start date cannot be empty</string>
+    <string name="new_toast_end_date_not_null">End date cannot be empty</string>
+    <string name="new_toast_incorrect_date">Start date and time cannot be greater than the end date and time</string>
+    <string name="new_tip_start_time">Start time</string>
+    <string name="new_tip_end_time">End time</string>
+    <string name="new_tip_start_date">Start date</string>
+    <string name="new_tip_end_date">End date</string>
+    <string name="new_time_picker_select_time">Select time</string>
+    <string name="new_dialog_ok">OK</string>
+    <string name="new_dialog_cancel">Cancel</string>
+
+    <!-- Others -->
+    <string name="week_name_monday">Monday</string>
+    <string name="week_name_tuesday">Tuesday</string>
+    <string name="week_name_wednesday">Wednesday</string>
+    <string name="week_name_thursday">Thursday</string>
+    <string name="week_name_friday">Friday</string>
+    <string name="week_name_saturday">Saturday</string>
+    <string name="week_name_sunday">Sunday</string>
+</resources>

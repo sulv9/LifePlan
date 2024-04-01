@@ -1,0 +1,25 @@
+CREATE TABLE plan(
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+    title TEXT NOT NULL,            -- 计划名称
+    description TEXT NOT NULL,      -- 计划描述
+    createDateTime TEXT NOT NULL,   -- 计划创建时间
+    startDateTime TEXT NOT NULL,    -- 计划预计开始执行时间
+    endDateTime TEXT NOT NULL,      -- 计划预计完成时间
+    priority INTEGER NOT NULL       -- 计划优先级，值越大优先级越高
+);
+
+getPlanByDay:
+SELECT *
+FROM plan
+WHERE
+    :datetime >= startDateTime AND :datetime <= endDateTime
+ORDER BY
+    priority DESC,
+    createDateTime ASC;
+
+insertPlan:
+INSERT INTO plan
+VALUES (NULL, :title, :description, datetime('now'), :startDateTime, :endDateTime, :priority);
+
+deletePlan:
+DELETE FROM plan WHERE id = ?;

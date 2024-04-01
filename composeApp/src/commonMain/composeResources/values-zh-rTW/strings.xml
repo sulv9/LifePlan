@@ -1,0 +1,38 @@
+<resources>
+    <!-- 首页 -->
+    <string name="main_top_bar_title">開始新的一天</string>
+    <string name="main_add_new_plan_content_desc">添加新的計畫</string>
+    <string name="main_create_plan_success">計畫創建成功</string>
+
+    <!-- 新建计划 -->
+    <string name="new_top_bar_title">新建計畫</string>
+    <string name="new_close_screen_content_desc">關閉當前介面</string>
+    <string name="new_label_plan_title">計畫名稱</string>
+    <string name="new_label_plan_desc">計畫描述</string>
+    <string name="new_text_create_plan">創建計畫</string>
+    <string name="new_text_priority">優先順序：</string>
+    <string name="new_text_blue_priority">不重要且不緊急</string>
+    <string name="new_text_green_priority">重要不緊急</string>
+    <string name="new_text_yellow_priority">不重要但緊急</string>
+    <string name="new_text_red_priority">重要且緊急</string>
+    <string name="new_toast_title_not_null">標題不能為空</string>
+    <string name="new_toast_start_date_not_null">起始日期不能為空</string>
+    <string name="new_toast_end_date_not_null">終止日期不能為空</string>
+    <string name="new_toast_incorrect_date">起始日期時間不能大於終止日期時間</string>
+    <string name="new_tip_start_time">起始時間</string>
+    <string name="new_tip_end_time">終止時間</string>
+    <string name="new_tip_start_date">起始日期</string>
+    <string name="new_tip_end_date">終止日期</string>
+    <string name="new_time_picker_select_time">選擇時間</string>
+    <string name="new_dialog_ok">確認</string>
+    <string name="new_dialog_cancel">取消</string>
+
+    <!-- 其他 -->
+    <string name="week_name_monday">週一</string>
+    <string name="week_name_tuesday">週二</string>
+    <string name="week_name_wednesday">週三</string>
+    <string name="week_name_thursday">週四</string>
+    <string name="week_name_friday">週五</string>
+    <string name="week_name_saturday">週六</string>
+    <string name="week_name_sunday">周日</string>
+</resources>
