@@ -5,22 +5,18 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerScope
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.text.input.TextFieldValue
-import kotlinx.coroutines.launch
-import lifeplan.composeapp.generated.resources.Res
-import lifeplan.composeapp.generated.resources.new_tip_start_date
-import org.jetbrains.compose.resources.stringResource
 import theme.blue800
 
 enum class Direction {
@@ -34,26 +30,32 @@ fun HorizontalLoadMorePager(
     initPage: Int = 0,
     pageCount: () -> Int = { 0 },
     loadMoreThreshold: Int = 1,
-    loadMoreCount: Int = 0,
     modifier: Modifier = Modifier,
-    loadMore: (Direction, Int) -> Unit = { _, _ -> },
+    loadMore: (Direction, Int) -> Int = { _, _ -> 0 },
     content: @Composable PagerScope.(page: Int) -> Unit = {},
 ) {
+    suspend fun PagerState.updatePage(page: Int) {
+        scroll {
+            updateCurrentPage(page)
+        }
+    }
+
     val pagerState = rememberPagerState(
         initialPage = initPage,
         pageCount = pageCount,
     )
 
-    LaunchedEffect(pagerState) {
-        snapshotFlow { pagerState.settledPage }.collect { page ->
-            if (page <= loadMoreThreshold) {
-                loadMore(Direction.START, page)
-                launch { pagerState.scrollToPage(page + loadMoreCount) }
-            } else if (page >= pagerState.pageCount - 1 - loadMoreThreshold) {
-                loadMore(Direction.END, page)
-            }
+    val currentSettledPage by derivedStateOf { pagerState.settledPage }
+
+    LaunchedEffect(currentSettledPage) {
+        if (currentSettledPage <= loadMoreThreshold) {
+            val loadMoreCount = loadMore(Direction.START, currentSettledPage)
+            pagerState.updatePage(currentSettledPage + loadMoreCount)
+        } else if (currentSettledPage >= pagerState.pageCount - 1 - loadMoreThreshold) {
+            loadMore(Direction.END, currentSettledPage)
         }
     }
+
 
     HorizontalPager(
         state = pagerState,

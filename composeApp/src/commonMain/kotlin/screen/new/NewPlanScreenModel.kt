@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import util.dateTimeFormat
+import util.hour2Millis
 import util.millisToDateTime
+import util.min2Millis
 import util.zeroTime
 
 class NewPlanScreenModel(
@@ -121,6 +123,10 @@ class NewPlanScreenModel(
             screenModelScope.launch {
                 eventChannel.send(NewPlanEvent.IncorrectStartEndDate)
             }
+            return
+        }
+        if (endTime == 0L) {
+            endTime = hour2Millis(23) + min2Millis(59)
         }
         planRepo.createPlan(
             title,

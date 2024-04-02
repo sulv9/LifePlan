@@ -2,8 +2,14 @@ package util
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.intl.Locale
+import cafe.adriel.voyager.core.lifecycle.LifecycleEffect
+import cafe.adriel.voyager.core.screen.Screen
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.Instant
@@ -34,6 +40,24 @@ import theme.bluePriority
 import theme.greenPriority
 import theme.redPriority
 import theme.yellowPriority
+
+// region Screen
+
+@Composable
+fun Screen.launchWhenStart(block: suspend () -> Unit) {
+    var job: Job? = null
+    val coroutineScope = rememberCoroutineScope()
+    LifecycleEffect(
+        onStarted = {
+            job = coroutineScope.launch { block() }
+        },
+        onDisposed = {
+            job?.cancel()
+        },
+    )
+}
+
+// endregion
 
 // region 时间
 
@@ -147,6 +171,9 @@ fun <T> MutableList<T>.forward(n: Int): List<T> {
 @Composable
 inline fun colorWithDark(lightColor: Color, darkColor: Color): Color =
     if (isSystemInDarkTheme()) darkColor else lightColor
+
+fun Modifier.ifThen(bool: Boolean, modifier: Modifier): Modifier =
+    this.then(if (bool) modifier else Modifier)
 
 // endregion
 

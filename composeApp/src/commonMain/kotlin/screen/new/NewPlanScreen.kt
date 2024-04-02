@@ -36,17 +36,13 @@ import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import cafe.adriel.voyager.core.lifecycle.LifecycleEffect
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import lifeplan.composeapp.generated.resources.Res
 import lifeplan.composeapp.generated.resources.new_dialog_cancel
 import lifeplan.composeapp.generated.resources.new_dialog_ok
@@ -74,6 +70,7 @@ import util.dateFormat
 import util.getPriorityColor
 import util.getPriorityName
 import util.hour2Millis
+import util.launchWhenStart
 import util.millis2HourAndMin
 import util.millisToDateTime
 import util.millisToTime
@@ -93,47 +90,38 @@ class NewPlanScreen(
 
         val navigator = LocalNavigator.currentOrThrow
         val newScreenModel = getScreenModel<NewPlanScreenModel>()
-        val coroutineScope = rememberCoroutineScope()
-        var eventFlowJob: Job? = null
         val snackBarHostState = LocalSnackBarHostState.current
 
-        LifecycleEffect(
-            onStarted = {
-                eventFlowJob = coroutineScope.launch {
-                    newScreenModel.eventFlow.collect {
-                        when (it) {
-                            is NewPlanEvent.ShowTitleInputError -> snackBarHostState?.showSnackbar(
-                                message = titleNotNullTip,
-                                withDismissAction = true
-                            )
+        launchWhenStart {
+            newScreenModel.eventFlow.collect {
+                when (it) {
+                    is NewPlanEvent.ShowTitleInputError -> snackBarHostState?.showSnackbar(
+                        message = titleNotNullTip,
+                        withDismissAction = true
+                    )
 
-                            is NewPlanEvent.ShowStartDateError -> snackBarHostState?.showSnackbar(
-                                message = startDateNotNullTip,
-                                withDismissAction = true
-                            )
+                    is NewPlanEvent.ShowStartDateError -> snackBarHostState?.showSnackbar(
+                        message = startDateNotNullTip,
+                        withDismissAction = true
+                    )
 
-                            is NewPlanEvent.ShowEndDateError -> snackBarHostState?.showSnackbar(
-                                message = endDateNotNullTip,
-                                withDismissAction = true
-                            )
+                    is NewPlanEvent.ShowEndDateError -> snackBarHostState?.showSnackbar(
+                        message = endDateNotNullTip,
+                        withDismissAction = true
+                    )
 
-                            is NewPlanEvent.IncorrectStartEndDate -> snackBarHostState?.showSnackbar(
-                                message = incorrectDateTip,
-                                withDismissAction = true
-                            )
+                    is NewPlanEvent.IncorrectStartEndDate -> snackBarHostState?.showSnackbar(
+                        message = incorrectDateTip,
+                        withDismissAction = true
+                    )
 
-                            is NewPlanEvent.CreatePlanSuccess -> {
-                                navigator.pop()
-                                onCreatePlanSuccess?.invoke()
-                            }
-                        }
+                    is NewPlanEvent.CreatePlanSuccess -> {
+                        navigator.pop()
+                        onCreatePlanSuccess?.invoke()
                     }
                 }
-            },
-            onDisposed = {
-                eventFlowJob?.cancel()
             }
-        )
+        }
 
         NewPlanScreenContent(
             viewModel = newScreenModel,

@@ -8,6 +8,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -29,8 +30,10 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ProvidableCompositionLocal
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -47,6 +50,7 @@ import org.jetbrains.compose.resources.stringResource
 import screen.main.MainScreen
 import screen.new.NewPlanScreen
 import theme.LifePlanTheme
+import theme.blue50
 
 @Composable
 fun App() {
@@ -58,23 +62,26 @@ val LocalSnackBarHostState: ProvidableCompositionLocal<SnackbarHostState?> =
 
 @Composable
 private fun LifePlanContent() {
-    val navigator = remember { mutableStateOf<Navigator?>(null) }
+    var navigator by remember { mutableStateOf<Navigator?>(null) }
     val topAppBarState = rememberTopAppBarState()
     val snackBarHostState = remember { SnackbarHostState() }
 
-    val topBarScrollBehavior = topBarScrollBehavior(navigator.value, topAppBarState)
+    val topBarScrollBehavior = topBarScrollBehavior(navigator, topAppBarState)
 
     Scaffold(
         modifier = Modifier.nestedScroll(topBarScrollBehavior.nestedScrollConnection),
         topBar = {
             TopAppBar(
-                title = { TopBarTitle(navigator.value) },
+                title = { TopBarTitle(navigator) },
                 actions = {
-                    IconButton(onClick = { onTopBarActionClick(navigator.value) }) {
-                        TopBarActionIcon(navigator.value)
+                    IconButton(onClick = { onTopBarActionClick(navigator) }) {
+                        TopBarActionIcon(navigator)
                     }
                 },
-                scrollBehavior = topBarScrollBehavior
+                scrollBehavior = topBarScrollBehavior,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = blue50.copy(alpha = 0.75F)
+                )
             )
         },
         snackbarHost = { SnackbarHost(hostState = snackBarHostState) },
@@ -83,10 +90,12 @@ private fun LifePlanContent() {
             LocalSnackBarHostState provides snackBarHostState
         ) {
             Box(
-                Modifier.padding(paddingValues).fillMaxSize()
+                Modifier.padding(paddingValues)
+                    .fillMaxSize()
+                    .background(blue50.copy(alpha = 0.75F))
             ) {
                 Navigator(screen = MainScreen()) { nav ->
-                    navigator.value = nav
+                    navigator = nav
                     LifePlanScreenTransition(nav)
                 }
             }

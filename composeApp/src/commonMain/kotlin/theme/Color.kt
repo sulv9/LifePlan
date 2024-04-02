@@ -1,6 +1,5 @@
 package theme
 
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.ui.graphics.Color
 
 val whiteBg = Color(0xFFFAFAFA)
@@ -21,5 +20,6 @@ val bluePriority = Color(0xFF386AF6)
 val blue50 = Color(0xFFf1fafd)
 val blue100 = Color(0xFFe4f4fa)
 val blue200 = Color(0xFFc2ebf5)
+val blue400 = Color(0xFF42A5F5)
 val blue700 = Color(0xFF0288D1)
 val blue800 = Color(0xFF0277BD)

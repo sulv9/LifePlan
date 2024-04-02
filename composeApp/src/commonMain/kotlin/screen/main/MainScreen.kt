@@ -5,8 +5,12 @@
 package screen.main
 
 import LocalSnackBarHostState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -14,48 +18,44 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Circle
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import cafe.adriel.voyager.core.lifecycle.LifecycleEffect
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import data.model.PlanEntity
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 import lifeplan.composeapp.generated.resources.Res
 import lifeplan.composeapp.generated.resources.main_create_plan_success
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
-import theme.blackBg
-import theme.grayBorder
+import theme.blue400
 import theme.subTitleFontColor
 import theme.titleFontColor
-import theme.whiteBg
 import util.Direction
 import util.HorizontalLoadMorePager
-import util.colorWithDark
 import util.forward
 import util.getPriorityColor
+import util.getPriorityName
+import util.ifThen
 import util.isEn
+import util.launchWhenStart
+import util.today
 import util.weekNames
 
 class MainScreen : Screen {
@@ -67,36 +67,28 @@ class MainScreen : Screen {
 
         val mainScreenModel = getScreenModel<MainScreenModel>()
         val snackBarHostState = LocalSnackBarHostState.current
-        val coroutineScope = rememberCoroutineScope()
-        var eventFlowJob: Job? = null
 
         val planListState by mainScreenModel.planList.collectAsState()
         val pageListState by mainScreenModel.weekList.collectAsState()
+        val selectedDayState by mainScreenModel.selectedDay.collectAsState()
 
         onCreatePlanSuccessCallback = {
             mainScreenModel.refreshPlanList()
             mainScreenModel.onCreatePlanSuccess()
         }
 
-        LifecycleEffect(
-            onStarted = {
-                eventFlowJob = coroutineScope.launch {
-                    mainScreenModel.eventFlow.collect {
-                        when (it) {
-                            is MainEvent.ShowPlanCreateSuccess -> {
-                                snackBarHostState?.showSnackbar(
-                                    message = planCreatedSuccessTip,
-                                    withDismissAction = true
-                                )
-                            }
-                        }
+        launchWhenStart {
+            mainScreenModel.eventFlow.collect {
+                when (it) {
+                    is MainEvent.ShowPlanCreateSuccess -> {
+                        snackBarHostState?.showSnackbar(
+                            message = planCreatedSuccessTip,
+                            withDismissAction = true
+                        )
                     }
                 }
-            },
-            onDisposed = {
-                eventFlowJob?.cancel()
             }
-        )
+        }
 
         MainScreenContent(
             planList = planListState,
@@ -104,10 +96,11 @@ class MainScreen : Screen {
             calendarPageList = pageListState,
             onCalendarPageCount = { mainScreenModel.getCalendarPageCount() },
             calendarLoadMoreThreshold = mainScreenModel.getCalendarLoadMoreThreshold(),
-            calendarLoadMoreCount = mainScreenModel.getCalendarLoadMoreCount(),
             calendarLoadMorePage = { dir, page ->
                 mainScreenModel.loadMoreCalendarPages(dir, page)
             },
+            updateSelectedDay = { mainScreenModel.updateSelectedDay(it) },
+            selectedDay = selectedDayState,
         )
     }
 }
@@ -119,8 +112,9 @@ private fun MainScreenContent(
     calendarPageList: List<List<LocalDate>> = emptyList(),
     onCalendarPageCount: () -> Int = { 0 },
     calendarLoadMoreThreshold: Int = 0,
-    calendarLoadMoreCount: Int = 0,
-    calendarLoadMorePage: (Direction, Int) -> Unit = { _, _ -> },
+    calendarLoadMorePage: (Direction, Int) -> Int = { _, _ -> 0 },
+    updateSelectedDay: (LocalDate) -> Unit = {},
+    selectedDay: LocalDate = today(),
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -130,11 +124,12 @@ private fun MainScreenContent(
             calendarPageList = calendarPageList,
             onCalendarPageCount = onCalendarPageCount,
             calendarLoadMoreThreshold = calendarLoadMoreThreshold,
-            calendarLoadMoreCount = calendarLoadMoreCount,
             calendarLoadMorePage = calendarLoadMorePage,
+            updateSelectedDay = updateSelectedDay,
+            selectedDay = selectedDay,
         )
 
-        Spacer(Modifier.height(12.dp))
+        Spacer(Modifier.height(20.dp))
 
         MainListContent(planList)
     }
@@ -146,8 +141,9 @@ private fun MainCalendarHeader(
     calendarPageList: List<List<LocalDate>> = emptyList(),
     onCalendarPageCount: () -> Int = { 0 },
     calendarLoadMoreThreshold: Int = 0,
-    calendarLoadMoreCount: Int = 0,
-    calendarLoadMorePage: (Direction, Int) -> Unit = { _, _ -> },
+    calendarLoadMorePage: (Direction, Int) -> Int = { _, _ -> 0 },
+    updateSelectedDay: (LocalDate) -> Unit = {},
+    selectedDay: LocalDate = today(),
 ) {
     Column(
         Modifier.fillMaxWidth()
@@ -177,17 +173,37 @@ private fun MainCalendarHeader(
             initPage = calendarInitPage,
             pageCount = onCalendarPageCount,
             loadMoreThreshold = calendarLoadMoreThreshold,
-            loadMoreCount = calendarLoadMoreCount,
             loadMore = calendarLoadMorePage,
         ) { index ->
             calendarPageList.getOrNull(index)?.let { date ->
                 Row {
-                    date.map { it.dayOfMonth.toString() }.forEach { day ->
-                        Text(
-                            text = day,
+                    date.forEach { day ->
+                        Box(
                             modifier = Modifier.weight(1f),
-                            textAlign = TextAlign.Center
-                        )
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                text = day.dayOfMonth.toString(),
+                                modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                    .background(
+                                        if (day.toString() == selectedDay.toString())
+                                            blue400
+                                        else
+                                            Color.Transparent,
+                                        shape = RoundedCornerShape(8.dp)
+                                    ).clickable {
+                                        updateSelectedDay(day)
+                                    }.ifThen(
+                                        day.toString() == today().toString(),
+                                        Modifier.border(2.dp, blue400, RoundedCornerShape(8.dp))
+                                    ).padding(horizontal = 10.dp, vertical = 4.dp),
+                                textAlign = TextAlign.Center,
+                                color = if (day.toString() == selectedDay.toString())
+                                    Color.White
+                                else
+                                    Color.Black
+                            )
+                        }
                     }
                 }
             }
@@ -201,6 +217,7 @@ private fun MainListContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         items(
             items = plans,
@@ -213,41 +230,34 @@ private fun MainListContent(
 
 @Composable
 private fun MainPlanCard(plan: PlanEntity) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = colorWithDark(whiteBg, blackBg)
-        ),
-        border = BorderStroke(1.dp, grayBorder),
-        onClick = { /* TODO navigate to detailScreen */ }
+    Row(
+        modifier = Modifier.fillMaxWidth().height(66.dp)
+            .padding(horizontal = 16.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White)
+            .clickable { /* TODO navigate to detailScreen */ },
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Circle,
-                contentDescription = "",
-                tint = getPriorityColor(plan.priority),
-                modifier = Modifier.size(36.dp).padding(horizontal = 4.dp)
+        Icon(
+            imageVector = Icons.Outlined.Circle,
+            contentDescription = getPriorityName(plan.priority),
+            tint = getPriorityColor(plan.priority),
+            modifier = Modifier.padding(horizontal = 12.dp)
+        )
+
+        Column {
+            Text(
+                text = plan.title,
+                fontSize = 16.sp,
+                color = titleFontColor,
             )
 
-            Spacer(Modifier.width(8.dp))
-
-            Column {
+            if (plan.description.isNotBlank()) {
                 Text(
-                    text = plan.title,
-                    fontSize = 16.sp,
-                    color = titleFontColor,
+                    text = plan.description,
+                    fontSize = 14.sp,
+                    color = subTitleFontColor,
                 )
-
-                if (plan.description.isNotBlank()) {
-                    Text(
-                        text = plan.description,
-                        fontSize = 14.sp,
-                        color = subTitleFontColor,
-                    )
-                }
             }
         }
     }

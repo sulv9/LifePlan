@@ -42,13 +42,13 @@ class MainScreenModel(
 
     init {
         _planList.update {
-            planRepo.getPlanByDay(_selectedDay.value.format())
+            planRepo.getPlanByDay(_selectedDay.value.format() + " 00:00:00")
         }
     }
 
     fun refreshPlanList() {
         _planList.update {
-            planRepo.getPlanByDay(_selectedDay.value.format())
+            planRepo.getPlanByDay(_selectedDay.value.format() + " 00:00:00")
         }
     }
 
@@ -56,7 +56,7 @@ class MainScreenModel(
         screenModelScope.launch { eventChannel.send(MainEvent.ShowPlanCreateSuccess) }
     }
 
-    fun loadMoreCalendarPages(direction: Direction, page: Int) {
+    fun loadMoreCalendarPages(direction: Direction, page: Int): Int {
         _weekList.update { prev ->
             val new = prev.toMutableList()
             val currentPageFirstDate = prev.getOrNull(page)?.getOrNull(0) ?: return@update prev
@@ -80,6 +80,12 @@ class MainScreenModel(
             }
             new
         }
+        return PRE_LOAD_CALENDAR_COUNT
+    }
+
+    fun updateSelectedDay(day: LocalDate) {
+        _selectedDay.value = day
+        refreshPlanList()
     }
 
     fun getCalendarPageCount(): Int = _weekList.value.size
@@ -87,8 +93,6 @@ class MainScreenModel(
     fun getInitWeekPage(): Int = INIT_WEEK_LIST_COUNT / 2
 
     fun getCalendarLoadMoreThreshold() = PRE_LOAD_CALENDAR_THRESHOLD
-
-    fun getCalendarLoadMoreCount() = PRE_LOAD_CALENDAR_COUNT
 
     private fun initWeekList(): List<List<LocalDate>> {
         val result = mutableListOf<List<LocalDate>>()
