@@ -1,10 +1,16 @@
 package util
 
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Done
+import androidx.compose.material.icons.rounded.Notifications
+import androidx.compose.material.icons.rounded.PriorityHigh
+import androidx.compose.material.icons.rounded.Work
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.intl.Locale
 import cafe.adriel.voyager.core.lifecycle.LifecycleEffect
 import cafe.adriel.voyager.core.screen.Screen
@@ -126,7 +132,7 @@ fun millisToTime(millis: Long): LocalDateTime =
         .toLocalDateTime(TimeZone.currentSystemDefault())
 
 fun validDateStr(dateMillis: Long, action: (Long) -> String) =
-    if (dateMillis > 0) action(dateMillis) else ""
+    if (dateMillis >= 0) action(dateMillis) else ""
 
 fun hour2Millis(hour: Int): Long = hour * 60 * 60 * 1000L
 
@@ -181,8 +187,8 @@ fun Modifier.ifThen(bool: Boolean, modifier: Modifier): Modifier =
 // region Entity
 
 fun getPriorityColor(priority: Int): Color = when (priority) {
-    1 -> bluePriority
-    2 -> greenPriority
+    1 -> greenPriority
+    2 -> bluePriority
     3 -> yellowPriority
     4 -> redPriority
     else -> Color(0xFFFFFF)
@@ -191,11 +197,27 @@ fun getPriorityColor(priority: Int): Color = when (priority) {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun getPriorityName(priority: Int): String = when (priority) {
-    1 -> stringResource(Res.string.new_text_blue_priority)
-    2 -> stringResource(Res.string.new_text_green_priority)
+    1 -> stringResource(Res.string.new_text_green_priority)
+    2 -> stringResource(Res.string.new_text_blue_priority)
     3 -> stringResource(Res.string.new_text_yellow_priority)
     4 -> stringResource(Res.string.new_text_red_priority)
     else -> ""
+}
+
+fun getProgressColor(progress: Float): Color = when {
+    progress in 0.0..20.0 -> redPriority
+    20 < progress && progress <= 50 -> yellowPriority
+    50 < progress && progress < 80 -> bluePriority
+    progress in 80.0..100.0 -> greenPriority
+    else -> Color(0xFFFFFF)
+}
+
+fun getProgressIcon(progress: Float): ImageVector = when {
+    progress in 0.0..20.0 -> Icons.Rounded.PriorityHigh
+    20 < progress && progress <= 50 -> Icons.Rounded.Notifications
+    50 < progress && progress < 80 -> Icons.Rounded.Work
+    progress in 80.0..100.0 -> Icons.Rounded.Done
+    else -> Icons.Rounded.Done
 }
 
 // endregion

@@ -42,13 +42,13 @@ class MainScreenModel(
 
     init {
         _planList.update {
-            planRepo.getPlanByDay(_selectedDay.value.format() + " 00:00:00")
+            planRepo.getPlanByDate(_selectedDay.value.format())
         }
     }
 
     fun refreshPlanList() {
         _planList.update {
-            planRepo.getPlanByDay(_selectedDay.value.format() + " 00:00:00")
+            planRepo.getPlanByDate(_selectedDay.value.format())
         }
     }
 

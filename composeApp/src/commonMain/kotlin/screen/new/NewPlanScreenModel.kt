@@ -10,10 +10,9 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import util.dateFormat
 import util.dateTimeFormat
-import util.hour2Millis
 import util.millisToDateTime
-import util.min2Millis
 import util.zeroTime
 
 class NewPlanScreenModel(
@@ -28,16 +27,19 @@ class NewPlanScreenModel(
     var priority by mutableStateOf(2F)
         private set
 
-    var startDate by mutableStateOf(0L)
+    var progress by mutableStateOf(0F)
         private set
 
-    var startTime by mutableStateOf(0L)
+    var startDate by mutableStateOf(-1L)
         private set
 
-    var endDate by mutableStateOf(0L)
+    var startTime by mutableStateOf(-1L)
         private set
 
-    var endTime by mutableStateOf(0L)
+    var endDate by mutableStateOf(-1L)
+        private set
+
+    var endTime by mutableStateOf(-1L)
         private set
 
     var titleInputError by mutableStateOf(false)
@@ -89,6 +91,10 @@ class NewPlanScreenModel(
         this.priority = priority.toInt().toFloat()
     }
 
+    fun updateProgress(progress: Float) {
+        this.progress = progress
+    }
+
     fun updateShowDatePickDialog(show: Boolean) {
         showDatePickDialog = show
     }
@@ -125,15 +131,15 @@ class NewPlanScreenModel(
             }
             return
         }
-        if (endTime == 0L) {
-            endTime = hour2Millis(23) + min2Millis(59)
-        }
         planRepo.createPlan(
             title,
             desc,
-            dateTimeFormat.format(millisToDateTime(startDate + startTime - zeroTime)),
-            dateTimeFormat.format(millisToDateTime(endDate + endTime - zeroTime)),
-            priority.toLong()
+            (if (startTime < 0) dateFormat else dateTimeFormat)
+                .format(millisToDateTime(startDate + startTime - if (startTime < 0) 0 else zeroTime)),
+            (if (endTime < 0) dateFormat else dateTimeFormat)
+                .format(millisToDateTime(endDate + endTime - if (startTime < 0) 0 else zeroTime)),
+            priority.toLong(),
+            progress.toInt().toLong()
         )
         screenModelScope.launch {
             eventChannel.send(NewPlanEvent.CreatePlanSuccess)

@@ -1,5 +1,6 @@
 @file:OptIn(
-    ExperimentalFoundationApi::class, ExperimentalResourceApi::class
+    ExperimentalFoundationApi::class, ExperimentalResourceApi::class,
+    ExperimentalMaterial3Api::class
 )
 
 package screen.main
@@ -18,13 +19,21 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.filled.Circle
+import androidx.compose.material.icons.outlined.Event
+import androidx.compose.material.icons.outlined.Flag
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -45,13 +54,13 @@ import lifeplan.composeapp.generated.resources.main_create_plan_success
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
 import theme.blue400
-import theme.subTitleFontColor
 import theme.titleFontColor
 import util.Direction
 import util.HorizontalLoadMorePager
 import util.forward
 import util.getPriorityColor
 import util.getPriorityName
+import util.getProgressColor
 import util.ifThen
 import util.isEn
 import util.launchWhenStart
@@ -230,35 +239,71 @@ private fun MainListContent(
 
 @Composable
 private fun MainPlanCard(plan: PlanEntity) {
-    Row(
-        modifier = Modifier.fillMaxWidth().height(66.dp)
+    Column(
+        modifier = Modifier.fillMaxWidth().height(68.dp)
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(12.dp))
+            .clickable { /* TODO navigate to detailScreen */ }
             .background(Color.White)
-            .clickable { /* TODO navigate to detailScreen */ },
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(12.dp),
+        verticalArrangement = Arrangement.Center,
     ) {
-        Icon(
-            imageVector = Icons.Outlined.Circle,
-            contentDescription = getPriorityName(plan.priority),
-            tint = getPriorityColor(plan.priority),
-            modifier = Modifier.padding(horizontal = 12.dp)
-        )
-
-        Column {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                modifier = Modifier.size(18.dp)
+                    .border(2.dp, getPriorityColor(plan.priority).copy(alpha = 0.75F), CircleShape),
+                imageVector = Icons.Filled.Circle,
+                contentDescription = getPriorityName(plan.priority),
+                tint = getPriorityColor(plan.priority).copy(alpha = 0.25F)
+            )
+            Spacer(Modifier.width(6.dp))
             Text(
                 text = plan.title,
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 color = titleFontColor,
+                maxLines = 1,
+            )
+        }
+
+        Spacer(Modifier.height(6.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = if (plan.remindDateTime.isNotBlank())
+                    Icons.Outlined.Event
+                else
+                    Icons.Outlined.Flag,
+                contentDescription = null,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(Modifier.width(2.dp))
+            Text(
+                text = with((plan.remindDateTime.ifBlank { plan.endDateTime }).split(" ")) {
+                    if (today().toString() == get(0) && size > 1)
+                        get(1).substringBeforeLast(':')
+                    else
+                        get(0).substringAfter('-')
+                },
+                fontSize = 10.sp,
+                lineHeight = 14.sp,
             )
 
-            if (plan.description.isNotBlank()) {
-                Text(
-                    text = plan.description,
-                    fontSize = 14.sp,
-                    color = subTitleFontColor,
-                )
-            }
+            Slider(
+                modifier = Modifier,
+                value = plan.progress.toFloat(),
+                onValueChange = {},
+                enabled = false,
+                valueRange = 0F..100F,
+                colors = SliderDefaults.colors(
+                    inactiveTrackColor = Color.Gray.copy(0.25F),
+                    disabledActiveTrackColor = getProgressColor(plan.progress.toFloat())
+                ),
+                thumb = {},
+            )
         }
     }
 }

@@ -12,12 +12,13 @@ class PlanRepository(database: LifePlanDatabase) {
         startDateTime: String,
         endDateTime: String,
         priority: Long,
+        progress: Long,
     ) {
-        dbQuery.insertPlan(title, description, startDateTime, endDateTime, priority)
+        dbQuery.insertPlan(title, description, startDateTime, endDateTime, priority, progress)
     }
 
-    fun getPlanByDay(datetime: String): List<PlanEntity> {
-        return dbQuery.getPlanByDay(datetime) { id: Long, title: String, description: String, createDateTime: String, startDateTime: String, endDateTime: String, priority: Long ->
+    fun getPlanByDate(date: String): List<PlanEntity> {
+        return dbQuery.getPlanByDate(date) { id: Long, title: String, description: String, createDateTime: String, startDateTime: String, endDateTime: String, priority: Long, progress: Long ->
             PlanEntity(
                 id,
                 title,
@@ -25,7 +26,8 @@ class PlanRepository(database: LifePlanDatabase) {
                 createDateTime,
                 startDateTime,
                 endDateTime,
-                priority.toInt()
+                priority.toInt(),
+                progress.toInt(), ""
             )
         }.executeAsList()
     }

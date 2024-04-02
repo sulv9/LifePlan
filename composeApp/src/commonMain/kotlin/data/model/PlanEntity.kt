@@ -19,4 +19,8 @@ data class PlanEntity(
     val endDateTime: String,
     @SerialName("priority")
     val priority: Int,
+    @SerialName("progress")
+    val progress: Int,
+    @SerialName("remindDateTime")
+    val remindDateTime: String,
 )

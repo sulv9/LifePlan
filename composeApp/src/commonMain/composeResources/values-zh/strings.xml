@@ -11,8 +11,8 @@
     <string name="new_label_plan_desc">计划描述</string>
     <string name="new_text_create_plan">创建计划</string>
     <string name="new_text_priority">优先级：</string>
-    <string name="new_text_blue_priority">不重要且不紧急</string>
-    <string name="new_text_green_priority">重要不紧急</string>
+    <string name="new_text_green_priority">不重要且不紧急</string>
+    <string name="new_text_blue_priority">重要不紧急</string>
     <string name="new_text_yellow_priority">不重要但紧急</string>
     <string name="new_text_red_priority">重要且紧急</string>
     <string name="new_toast_title_not_null">标题不能为空</string>
@@ -26,6 +26,7 @@
     <string name="new_time_picker_select_time">选择时间</string>
     <string name="new_dialog_ok">确认</string>
     <string name="new_dialog_cancel">取消</string>
+    <string name="new_text_current_progress">当前进度：</string>
 
     <!-- 其他 -->
     <string name="week_name_monday">周一</string>

@@ -6,6 +6,7 @@
 package screen.new
 
 import LocalSnackBarHostState
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -15,14 +16,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Slider
@@ -38,6 +43,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
@@ -49,6 +56,7 @@ import lifeplan.composeapp.generated.resources.new_dialog_ok
 import lifeplan.composeapp.generated.resources.new_label_plan_desc
 import lifeplan.composeapp.generated.resources.new_label_plan_title
 import lifeplan.composeapp.generated.resources.new_text_create_plan
+import lifeplan.composeapp.generated.resources.new_text_current_progress
 import lifeplan.composeapp.generated.resources.new_text_priority
 import lifeplan.composeapp.generated.resources.new_tip_end_date
 import lifeplan.composeapp.generated.resources.new_tip_end_time
@@ -69,6 +77,8 @@ import util.OutlinedTextFieldButton
 import util.dateFormat
 import util.getPriorityColor
 import util.getPriorityName
+import util.getProgressColor
+import util.getProgressIcon
 import util.hour2Millis
 import util.launchWhenStart
 import util.millis2HourAndMin
@@ -138,9 +148,9 @@ private fun NewPlanScreenContent(
     if (viewModel.showDatePickDialog) {
         val datePickerState = rememberDatePickerState()
 
-        if (isShowStartDatePickDialog.value && viewModel.startDate > 0L) {
+        if (isShowStartDatePickDialog.value && viewModel.startDate >= 0L) {
             datePickerState.selectedDateMillis = viewModel.startDate
-        } else if (isShowStartDatePickDialog.value.not() && viewModel.endDate > 0L) {
+        } else if (isShowStartDatePickDialog.value.not() && viewModel.endDate >= 0L) {
             datePickerState.selectedDateMillis = viewModel.endDate
         }
 
@@ -187,14 +197,14 @@ private fun NewPlanScreenContent(
 
     if (viewModel.showTimePickDialog) {
         val timePickerState = rememberTimePickerState(
-            initialHour = if (isShowStartDatePickDialog.value && viewModel.startTime > 0L) {
+            initialHour = if (isShowStartDatePickDialog.value && viewModel.startTime >= 0L) {
                 millis2HourAndMin(viewModel.startTime).first
-            } else if (isShowStartDatePickDialog.value.not() && viewModel.endTime > 0L) {
+            } else if (isShowStartDatePickDialog.value.not() && viewModel.endTime >= 0L) {
                 millis2HourAndMin(viewModel.endTime).first
             } else 0,
-            initialMinute = if (isShowStartDatePickDialog.value && viewModel.startTime > 0L) {
+            initialMinute = if (isShowStartDatePickDialog.value && viewModel.startTime >= 0L) {
                 millis2HourAndMin(viewModel.startTime).second
-            } else if (isShowStartDatePickDialog.value.not() && viewModel.endTime > 0L) {
+            } else if (isShowStartDatePickDialog.value.not() && viewModel.endTime >= 0L) {
                 millis2HourAndMin(viewModel.endTime).second
             } else 0,
         )
@@ -364,6 +374,42 @@ private fun NewPlanScreenContent(
                 }
             }
 
+            Spacer(Modifier.height(18.dp))
+
+            Column {
+                Text(
+                    text = stringResource(Res.string.new_text_current_progress) +
+                            viewModel.progress.toInt().toString() + "%"
+                )
+
+                Slider(
+                    value = viewModel.progress,
+                    onValueChange = { viewModel.updateProgress(it) },
+                    colors = SliderDefaults.colors(
+                        thumbColor = getProgressColor(viewModel.progress),
+                        activeTrackColor = getProgressColor(viewModel.progress),
+                        inactiveTrackColor = Color.Gray.copy(0.25F)
+                    ),
+                    valueRange = 0F..100F,
+                    thumb = {
+                        Box(
+                            Modifier.clip(CircleShape)
+                                .size(20.dp)
+                                .background(getProgressColor(viewModel.progress)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = getProgressIcon(viewModel.progress),
+                                contentDescription = stringResource(Res.string.new_text_current_progress) +
+                                        viewModel.progress.toInt().toString() + "%",
+                                tint = Color.White,
+                                modifier = Modifier.size(12.dp)
+                            )
+                        }
+                    }
+                )
+            }
+
             Spacer(Modifier.height(24.dp))
 
             Box(
@@ -372,6 +418,9 @@ private fun NewPlanScreenContent(
             ) {
                 Button(
                     modifier = Modifier.width(this@BoxWithConstraints.maxWidth / 2),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = blue700
+                    ),
                     onClick = { viewModel.createPlan() }
                 ) {
                     Text(stringResource(Res.string.new_text_create_plan))

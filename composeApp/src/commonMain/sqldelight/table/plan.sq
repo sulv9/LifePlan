@@ -5,21 +5,23 @@ CREATE TABLE plan(
     createDateTime TEXT NOT NULL,   -- 计划创建时间
     startDateTime TEXT NOT NULL,    -- 计划预计开始执行时间
     endDateTime TEXT NOT NULL,      -- 计划预计完成时间
-    priority INTEGER NOT NULL       -- 计划优先级，值越大优先级越高
+    priority INTEGER NOT NULL,      -- 计划优先级，值越大优先级越高
+    progress INTEGER NOT NULL       -- 进度，0 到 100
 );
 
-getPlanByDay:
+getPlanByDate:
 SELECT *
 FROM plan
 WHERE
-    :datetime >= startDateTime AND :datetime <= endDateTime
+    date(:date) >= date(startDateTime) AND date(:date) <= date(endDateTime)
 ORDER BY
     priority DESC,
-    createDateTime ASC;
+    endDateTime ASC,
+    progress ASC;
 
 insertPlan:
 INSERT INTO plan
-VALUES (NULL, :title, :description, datetime('now'), :startDateTime, :endDateTime, :priority);
+VALUES (NULL, :title, :description, datetime('now'), :startDateTime, :endDateTime, :priority, :progress);
 
 deletePlan:
 DELETE FROM plan WHERE id = ?;
