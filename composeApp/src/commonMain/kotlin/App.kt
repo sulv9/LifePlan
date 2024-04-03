@@ -1,12 +1,11 @@
 @file:OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
 
-import androidx.compose.animation.core.FiniteAnimationSpec
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -29,6 +27,7 @@ import androidx.compose.material3.TopAppBarState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,8 +35,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import cafe.adriel.voyager.core.stack.StackEvent
 import cafe.adriel.voyager.navigator.Navigator
 import cafe.adriel.voyager.transitions.ScreenTransition
 import lifeplan.composeapp.generated.resources.Res
@@ -105,31 +104,52 @@ private fun LifePlanContent() {
 
 @Composable
 private fun TopBarTitle(navigator: Navigator?) {
-    val title = navigator?.let {
-        when (it.lastItem) {
-            is MainScreen -> stringResource(Res.string.main_top_bar_title)
-            is NewPlanScreen -> stringResource(Res.string.new_top_bar_title)
-            else -> ""
+    navigator?.let { nav ->
+        AnimatedContent(
+            nav.lastItem,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(150, 100))
+                    .togetherWith(fadeOut(tween(150))).using(SizeTransform())
+            }
+        ) {
+            Text(
+                text = when (it) {
+                    is MainScreen -> stringResource(Res.string.main_top_bar_title)
+                    is NewPlanScreen -> stringResource(Res.string.new_top_bar_title)
+                    else -> ""
+                }
+            )
         }
-    } ?: ""
-    Text(
-        text = title
-    )
+    }
 }
 
 @Composable
 private fun TopBarActionIcon(navigator: Navigator?) {
-    val (imageVector, contentDescription) = navigator?.let {
-        when (it.lastItem) {
-            is MainScreen -> Icons.Rounded.Add to stringResource(Res.string.main_add_new_plan_content_desc)
-            is NewPlanScreen -> Icons.Rounded.Close to stringResource(Res.string.new_close_screen_content_desc)
-            else -> null to ""
+    navigator?.let { nav ->
+        val rotation = remember { Animatable(0F) }
+
+        LaunchedEffect(nav.lastItem) {
+            if (nav.lastItem is MainScreen) { // 进入 Main
+                rotation.animateTo(
+                    targetValue = 0F,
+                    animationSpec = tween(150)
+                )
+            } else if (nav.lastItem !is MainScreen) { // 退出 Main
+                rotation.animateTo(
+                    targetValue = -45F,
+                    animationSpec = tween(150)
+                )
+            }
         }
-    } ?: (null to "")
-    if (imageVector != null) {
+
         Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
+            imageVector = Icons.Rounded.Add,
+            contentDescription = if (nav.lastItem is MainScreen)
+                stringResource(Res.string.main_add_new_plan_content_desc)
+            else stringResource(Res.string.new_close_screen_content_desc),
+            modifier = Modifier.graphicsLayer {
+                rotationZ = rotation.value
+            }
         )
     }
 }
@@ -140,6 +160,7 @@ private fun onTopBarActionClick(navigator: Navigator?) {
             is MainScreen -> it.push(
                 NewPlanScreen((it.lastItem as MainScreen).onCreatePlanSuccessCallback)
             )
+
             is NewPlanScreen -> it.pop()
             else -> Unit
         }
@@ -166,32 +187,11 @@ private fun topBarScrollBehavior(
 private fun LifePlanScreenTransition(
     navigator: Navigator,
 ) {
-    val enterAnim: FiniteAnimationSpec<Float> = spring(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessLow
-    )
-    val exitAnim: FiniteAnimationSpec<Float> = spring(
-        dampingRatio = Spring.DampingRatioNoBouncy,
-        stiffness = Spring.StiffnessMedium
-    )
-
     ScreenTransition(
         navigator = navigator,
-        modifier = Modifier,
-        content = { it.Content() },
         transition = {
-            println("Qiutian - ${navigator.lastEvent} ${navigator.lastItem} ${navigator.parent}")
-            val (initialScale, targetScale) = when (navigator.lastEvent) {
-                StackEvent.Pop -> 1.0f to 0.8f
-                else -> 0.8f to 1.0f
-            }
-
-            fadeIn(animationSpec = enterAnim) +
-                    scaleIn(animationSpec = enterAnim, initialScale = initialScale) togetherWith
-                    fadeOut(animationSpec = exitAnim) + scaleOut(
-                animationSpec = exitAnim,
-                targetScale = targetScale
-            )
+            fadeIn(animationSpec = tween(250, delayMillis = 150)) togetherWith
+                    fadeOut(animationSpec = tween(250))
         }
     )
 }
