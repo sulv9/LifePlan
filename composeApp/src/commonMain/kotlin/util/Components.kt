@@ -1,8 +1,9 @@
 package util
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerScope
 import androidx.compose.foundation.pager.PagerState
@@ -11,12 +12,11 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import theme.blue800
 
 enum class Direction {
@@ -72,28 +72,25 @@ fun OutlinedTextFieldButton(
     isError: Boolean = false,
     onClick: () -> Unit = {},
 ) {
-    val source = remember { MutableInteractionSource() }
-    val pressedState = source.interactions.collectAsState(
-        initial = PressInteraction.Cancel(PressInteraction.Press(Offset.Zero))
-    )
-
-    if (pressedState.value is PressInteraction.Release) {
-        onClick.invoke()
-        source.tryEmit(PressInteraction.Cancel(PressInteraction.Press(Offset.Zero)))
-    }
-
     OutlinedTextField(
         value = value,
         onValueChange = { },
         label = label,
         readOnly = true,
-        modifier = Modifier.then(modifier),
+        modifier = Modifier.pointerInput(Unit) {
+            awaitEachGesture {
+                awaitFirstDown(pass = PointerEventPass.Initial)
+                val upEvent = waitForUpOrCancellation(pass = PointerEventPass.Initial)
+                if (upEvent != null) {
+                    onClick()
+                }
+            }
+        }.then(modifier),
         isError = isError,
         colors = OutlinedTextFieldDefaults.colors(
             cursorColor = blue800,
             focusedLabelColor = blue800,
             focusedBorderColor = blue800,
         ),
-        interactionSource = source,
     )
 }
