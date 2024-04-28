@@ -22,6 +22,7 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
+import kotlinx.datetime.format.DateTimeComponents
 import kotlinx.datetime.format.char
 import kotlinx.datetime.isoDayNumber
 import kotlinx.datetime.minus
@@ -83,6 +84,12 @@ val dateTimeFormat = LocalDateTime.Format {
     hour(); char(':'); minute(); char(':'); second()
 }
 
+val dateTimeComponentsFormat = DateTimeComponents.Format {
+    year(); char('-'); monthNumber(); char('-'); dayOfMonth()
+    char(' ')
+    hour(); char(':'); minute(); char(':'); second()
+}
+
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun weekNames() = listOf(
@@ -130,6 +137,18 @@ fun millisToDateTime(millis: Long): LocalDateTime =
 fun millisToTime(millis: Long): LocalDateTime =
     Instant.fromEpochMilliseconds(millis - zeroTime)
         .toLocalDateTime(TimeZone.currentSystemDefault())
+
+fun parseDate2Millis(dateTime: String): Long =
+    Instant.parse(
+        dateTime.let { if (it.contains(" ")) it else "$it 00:00:00" },
+        dateTimeComponentsFormat
+    ).toEpochMilliseconds()
+
+fun parseTime2Millis(dateTime: String): Long = dateTime.split(" ").run {
+    if (size == 1) -1L else get(0).split(":").run {
+        get(0).toInt() * 60 * 60 * 1000L + get(1).toInt() * 60 * 1000L + get(2).toInt() * 1000L
+    }
+}
 
 fun validDateStr(dateMillis: Long, action: (Long) -> String) =
     if (dateMillis >= 0) action(dateMillis) else ""

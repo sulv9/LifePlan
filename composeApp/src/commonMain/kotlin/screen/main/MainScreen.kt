@@ -36,6 +36,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -47,12 +48,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
 import data.model.PlanEntity
+import event.LifePlanEvent
+import event.NoneLifePlanEvent
+import event.OnPlanCreateSuccess
 import kotlinx.datetime.LocalDate
 import lifeplan.composeapp.generated.resources.Res
 import lifeplan.composeapp.generated.resources.main_create_plan_success
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
+import screen.detail.DetailScreen
 import theme.blue400
 import theme.titleFontColor
 import util.Direction
@@ -63,40 +69,38 @@ import util.getPriorityName
 import util.getProgressColor
 import util.ifThen
 import util.isEn
-import util.launchWhenStart
 import util.today
 import util.weekNames
 
 class MainScreen : Screen {
-    var onCreatePlanSuccessCallback: (() -> Unit)? = null
-
     @Composable
     override fun Content() {
         val planCreatedSuccessTip = stringResource(Res.string.main_create_plan_success)
 
         val mainScreenModel = getScreenModel<MainScreenModel>()
+        val navigator = LocalNavigator.current
         val snackBarHostState = LocalSnackBarHostState.current
 
         val planListState by mainScreenModel.planList.collectAsState()
         val pageListState by mainScreenModel.weekList.collectAsState()
         val selectedDayState by mainScreenModel.selectedDay.collectAsState()
 
-        onCreatePlanSuccessCallback = {
+        LaunchedEffect(Unit) {
             mainScreenModel.refreshPlanList()
-            mainScreenModel.onCreatePlanSuccess()
         }
 
-        launchWhenStart {
-            mainScreenModel.eventFlow.collect {
-                when (it) {
-                    is MainEvent.ShowPlanCreateSuccess -> {
-                        snackBarHostState?.showSnackbar(
-                            message = planCreatedSuccessTip,
-                            withDismissAction = true
-                        )
-                    }
+        LaunchedEffect(LifePlanEvent.event) {
+            when (LifePlanEvent.event) {
+                is OnPlanCreateSuccess -> {
+                    snackBarHostState?.showSnackbar(
+                        message = planCreatedSuccessTip,
+                        withDismissAction = true
+                    )
                 }
             }
+
+            if (LifePlanEvent.event !is NoneLifePlanEvent)
+                LifePlanEvent.sendEvent(NoneLifePlanEvent)
         }
 
         MainScreenContent(
@@ -110,6 +114,9 @@ class MainScreen : Screen {
             },
             updateSelectedDay = { mainScreenModel.updateSelectedDay(it) },
             selectedDay = selectedDayState,
+            onNavigateDetailScreen = {
+                navigator?.push(DetailScreen(it))
+            }
         )
     }
 }
@@ -124,6 +131,7 @@ private fun MainScreenContent(
     calendarLoadMorePage: (Direction, Int) -> Int = { _, _ -> 0 },
     updateSelectedDay: (LocalDate) -> Unit = {},
     selectedDay: LocalDate = today(),
+    onNavigateDetailScreen: (Long) -> Unit = {},
 ) {
     Column(
         modifier = Modifier.fillMaxSize()
@@ -140,7 +148,10 @@ private fun MainScreenContent(
 
         Spacer(Modifier.height(20.dp))
 
-        MainListContent(planList)
+        MainListContent(
+            plans = planList,
+            onNavigateDetailScreen = onNavigateDetailScreen
+        )
     }
 }
 
@@ -223,6 +234,7 @@ private fun MainCalendarHeader(
 @Composable
 private fun MainListContent(
     plans: List<PlanEntity>,
+    onNavigateDetailScreen: (Long) -> Unit = {},
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -232,20 +244,34 @@ private fun MainListContent(
             items = plans,
             key = { plan -> plan.id }
         ) { plan ->
-            MainPlanCard(plan)
+            MainPlanCard(
+                modifier = Modifier.animateItemPlacement(),
+                plan = plan,
+                onNavigateDetailScreen = onNavigateDetailScreen
+            )
         }
     }
 }
 
 @Composable
-private fun MainPlanCard(plan: PlanEntity) {
+private fun MainPlanCard(
+    modifier: Modifier = Modifier,
+    plan: PlanEntity,
+    onNavigateDetailScreen: (Long) -> Unit = {},
+) {
     Column(
         modifier = Modifier.fillMaxWidth().height(68.dp)
             .padding(horizontal = 16.dp)
             .clip(RoundedCornerShape(12.dp))
-            .clickable { /* TODO navigate to detailScreen */ }
-            .background(Color.White)
-            .padding(12.dp),
+            .clickable { onNavigateDetailScreen(plan.id) }
+            .background(color = Color.White.copy(0.85F))
+            .border(
+                width = 0.5.dp,
+                color = Color.Gray.copy(0.1F),
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(12.dp)
+            .then(modifier),
         verticalArrangement = Arrangement.Center,
     ) {
         Row(

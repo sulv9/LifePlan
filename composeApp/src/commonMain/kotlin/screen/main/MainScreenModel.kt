@@ -1,16 +1,11 @@
 package screen.main
 
 import cafe.adriel.voyager.core.model.ScreenModel
-import cafe.adriel.voyager.core.model.screenModelScope
 import data.model.PlanEntity
 import data.repo.PlanRepository
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 import kotlinx.datetime.DatePeriod
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -37,23 +32,10 @@ class MainScreenModel(
     private val _selectedDay = MutableStateFlow(today())
     val selectedDay = _selectedDay.asStateFlow()
 
-    private var eventChannel = Channel<MainEvent>()
-    val eventFlow: Flow<MainEvent> = eventChannel.receiveAsFlow()
-
-    init {
-        _planList.update {
-            planRepo.getPlanByDate(_selectedDay.value.format())
-        }
-    }
-
     fun refreshPlanList() {
         _planList.update {
             planRepo.getPlanByDate(_selectedDay.value.format())
         }
-    }
-
-    fun onCreatePlanSuccess() {
-        screenModelScope.launch { eventChannel.send(MainEvent.ShowPlanCreateSuccess) }
     }
 
     fun loadMoreCalendarPages(direction: Direction, page: Int): Int {

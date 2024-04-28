@@ -28,6 +28,10 @@
     <string name="new_dialog_cancel">Cancel</string>
     <string name="new_text_current_progress">Current progress: </string>
 
+    <!-- 计划详情 -->
+    <string name="detail_screen_title">Plan detail</string>
+    <string name="detail_delete_plan">Delete plan</string>
+
     <!-- Others -->
     <string name="week_name_monday">Monday</string>
     <string name="week_name_tuesday">Tuesday</string>

@@ -111,14 +111,14 @@ class NewPlanScreenModel(
             }
             return
         }
-        if (startDate == 0L) {
+        if (startDate < 0L) {
             startDateError = true
             screenModelScope.launch {
                 eventChannel.send(NewPlanEvent.ShowStartDateError)
             }
             return
         }
-        if (endDate == 0L) {
+        if (endDate < 0L) {
             endDateError = true
             screenModelScope.launch {
                 eventChannel.send(NewPlanEvent.ShowEndDateError)
@@ -139,7 +139,7 @@ class NewPlanScreenModel(
             (if (endTime < 0) dateFormat else dateTimeFormat)
                 .format(millisToDateTime(endDate + endTime - if (startTime < 0) 0 else zeroTime)),
             priority.toLong(),
-            progress.toInt().toLong()
+            progress.toInt().toLong(), ""
         )
         screenModelScope.launch {
             eventChannel.send(NewPlanEvent.CreatePlanSuccess)

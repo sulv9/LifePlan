@@ -13,7 +13,7 @@ import org.koin.dsl.KoinAppDeclaration
 import org.koin.dsl.module
 import platform.DatabaseDriverFactory
 import platform.platformModule
-import screen.detail.PlanDetailScreenModel
+import screen.detail.DetailScreenModel
 import screen.main.MainScreenModel
 import screen.new.NewPlanScreenModel
 
@@ -46,5 +46,5 @@ val dataModule = module {
 val screenModelsModule = module {
     factoryOf(::MainScreenModel)
     factoryOf(::NewPlanScreenModel)
-    factoryOf(::PlanDetailScreenModel)
+    factoryOf(::DetailScreenModel)
 }

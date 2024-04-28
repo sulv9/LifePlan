@@ -28,6 +28,10 @@
     <string name="new_dialog_cancel">取消</string>
     <string name="new_text_current_progress">當前進度：</string>
 
+    <!-- 计划详情 -->
+    <string name="detail_screen_title">計畫詳情</string>
+    <string name="detail_delete_plan">删除計畫</string>
+
     <!-- 其他 -->
     <string name="week_name_monday">週一</string>
     <string name="week_name_tuesday">週二</string>
