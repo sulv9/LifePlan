@@ -6,3 +6,4 @@
   Copyright © 2024 orgName. All rights reserved.
 */
 "CFBundleDisplayName" = "人生規劃與計畫安排";
+"NSCalendarsUsageDescription" = "App需要您的同意,才能访问日历";

@@ -47,6 +47,9 @@ class DetailScreenModel(
     var endTime by mutableStateOf(parseTime2Millis(initialPlan.endDateTime))
         private set
 
+    var remindDateTime by mutableStateOf(initialPlan.remindDateTime)
+        private set
+
     private var eventChannel = Channel<NewPlanEvent>()
     val eventFlow: Flow<NewPlanEvent> = eventChannel.receiveAsFlow()
 
@@ -54,6 +57,12 @@ class DetailScreenModel(
         private set
 
     var showTimePickDialog by mutableStateOf(false)
+        private set
+
+    var showRemindDatePickDialog by mutableStateOf(false)
+        private set
+
+    var showRemindTimePickDialog by mutableStateOf(false)
         private set
 
     fun deletePlan() {
@@ -113,11 +122,24 @@ class DetailScreenModel(
         planRepo.updateEndDateTime(initialPlan.id, endDateTime)
     }
 
+    fun updatePlanRemindDateTime(remindDateTime: String) {
+        this.remindDateTime = "$remindDateTime:00"
+        planRepo.updateRemindDateTime(initialPlan.id, "$remindDateTime:00")
+    }
+
     fun updateShowDatePickDialog(show: Boolean) {
         showDatePickDialog = show
     }
 
     fun updateShowTimePickDialog(show: Boolean) {
         showTimePickDialog = show
+    }
+
+    fun updateShowRemindDatePickDialog(show: Boolean) {
+        showRemindDatePickDialog = show
+    }
+
+    fun updateShowRemindTimePickDialog(show: Boolean) {
+        showRemindTimePickDialog = show
     }
 }

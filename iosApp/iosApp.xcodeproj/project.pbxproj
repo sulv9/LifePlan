@@ -11,6 +11,7 @@
 		058557D9273AAEEB004C7B11 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 058557D8273AAEEB004C7B11 /* Preview Assets.xcassets */; };
 		2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2152FB032600AC8F00CF470E /* iOSApp.swift */; };
 		366BE3872BB40D76005E482D /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 366BE3892BB40D76005E482D /* InfoPlist.strings */; };
+		3679EDDC2BDEACEC006620A8 /* RemindTimeUtilities.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3679EDDB2BDEACEC006620A8 /* RemindTimeUtilities.swift */; };
 		7555FF83242A565900829871 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7555FF82242A565900829871 /* ContentView.swift */; };
 /* End PBXBuildFile section */
 
@@ -21,6 +22,7 @@
 		366BE3882BB40D76005E482D /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		366BE38A2BB40DD1005E482D /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		366BE38B2BB40E5D005E482D /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		3679EDDB2BDEACEC006620A8 /* RemindTimeUtilities.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemindTimeUtilities.swift; sourceTree = "<group>"; };
 		7555FF7B242A565900829871 /* LifePlan.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LifePlan.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7555FF82242A565900829871 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		7555FF8C242A565B00829871 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -80,6 +82,7 @@
 				2152FB032600AC8F00CF470E /* iOSApp.swift */,
 				058557D7273AAEEB004C7B11 /* Preview Content */,
 				366BE3892BB40D76005E482D /* InfoPlist.strings */,
+				3679EDDB2BDEACEC006620A8 /* RemindTimeUtilities.swift */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -192,6 +195,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				2152FB042600AC8F00CF470E /* iOSApp.swift in Sources */,
+				3679EDDC2BDEACEC006620A8 /* RemindTimeUtilities.swift in Sources */,
 				7555FF83242A565900829871 /* ContentView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

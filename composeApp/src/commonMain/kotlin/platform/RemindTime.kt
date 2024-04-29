@@ -1,3 +1,3 @@
 package platform
 
-expect fun remindTime(time: Long)
+expect fun remindTime(title: String, description: String, reminderTime: Long)

@@ -23,6 +23,7 @@
     <string name="new_tip_end_time">终止时间</string>
     <string name="new_tip_start_date">起始日期</string>
     <string name="new_tip_end_date">终止日期</string>
+    <string name="new_tip_remind_date_time">提醒时间</string>
     <string name="new_time_picker_select_time">选择时间</string>
     <string name="new_dialog_ok">确认</string>
     <string name="new_dialog_cancel">取消</string>

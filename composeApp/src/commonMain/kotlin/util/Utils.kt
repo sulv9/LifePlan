@@ -145,7 +145,7 @@ fun parseDate2Millis(dateTime: String): Long =
     ).toEpochMilliseconds()
 
 fun parseTime2Millis(dateTime: String): Long = dateTime.split(" ").run {
-    if (size == 1) -1L else get(0).split(":").run {
+    if (size == 1) -1L else get(1).split(":").run {
         get(0).toInt() * 60 * 60 * 1000L + get(1).toInt() * 60 * 1000L + get(2).toInt() * 1000L
     }
 }

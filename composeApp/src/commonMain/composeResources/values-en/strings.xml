@@ -23,6 +23,7 @@
     <string name="new_tip_end_time">End time</string>
     <string name="new_tip_start_date">Start date</string>
     <string name="new_tip_end_date">End date</string>
+    <string name="new_tip_remind_date_time">Reminder time</string>
     <string name="new_time_picker_select_time">Select time</string>
     <string name="new_dialog_ok">OK</string>
     <string name="new_dialog_cancel">Cancel</string>

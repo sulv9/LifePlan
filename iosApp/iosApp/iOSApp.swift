@@ -9,6 +9,7 @@ struct iOSApp: App {
                 // Do nothing
             }
         )
+        RemindTimeUtilities().initRemindProtocol()
     }
 
 	var body: some Scene {

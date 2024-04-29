@@ -16,6 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
+import cafe.adriel.voyager.navigator.LocalNavigator
+import cafe.adriel.voyager.navigator.currentOrThrow
 import lifeplan.composeapp.generated.resources.Res
 import lifeplan.composeapp.generated.resources.detail_delete_plan
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -27,10 +29,15 @@ import util.PlanDetails
 class DetailScreen(private val id: Long) : Screen {
     @Composable
     override fun Content() {
+        val navigator = LocalNavigator.currentOrThrow
         val detailScreenModel = getScreenModel<DetailScreenModel> { parametersOf(id) }
 
         DetailScreenContent(
             viewModel = detailScreenModel,
+            onPlanDeleted = {
+                detailScreenModel.deletePlan()
+                navigator.pop()
+            }
         )
     }
 }
@@ -38,6 +45,7 @@ class DetailScreen(private val id: Long) : Screen {
 @Composable
 private fun DetailScreenContent(
     viewModel: DetailScreenModel,
+    onPlanDeleted: () -> Unit = {},
 ) {
     val isShowStartDatePickDialog = remember { mutableStateOf(false) }
 
@@ -55,6 +63,13 @@ private fun DetailScreenContent(
         onStartTimeUpdate = viewModel::updatePlanStartTime,
         onEndTimeUpdate = viewModel::updatePlanEndTime,
         onTimePickDialogDismiss = { viewModel.updateShowTimePickDialog(false) },
+        showRemindDateDialog = viewModel.showRemindDatePickDialog,
+        showRemindTimeDialog = viewModel.showRemindTimePickDialog,
+        remindDateTime = viewModel.remindDateTime.substringBefore(":00"),
+        onRemindTimeDialogConfirm = viewModel::updatePlanRemindDateTime,
+        onRemindDateDialogDismiss = { viewModel.updateShowRemindDatePickDialog(false) },
+        onRemindTimeDialogShow = { viewModel.updateShowRemindTimePickDialog(true) },
+        onRemindTimeDialogDismiss = { viewModel.updateShowRemindTimePickDialog(false) },
     )
 
     PlanDetails(
@@ -86,6 +101,8 @@ private fun DetailScreenContent(
         },
         progress = viewModel.progress.toFloat(),
         onProgressChange = viewModel::updatePlanProgress,
+        remindDateTime = viewModel.remindDateTime,
+        onRemindDateTimeClick = { viewModel.updateShowRemindDatePickDialog(true) },
         bottomButton = {
             Box(
                 modifier = Modifier.fillMaxWidth(),
@@ -96,7 +113,7 @@ private fun DetailScreenContent(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.Red.copy(alpha = 0.75f),
                     ),
-                    onClick = { viewModel.deletePlan() }
+                    onClick = onPlanDeleted,
                 ) {
                     Text(stringResource(Res.string.detail_delete_plan))
                 }

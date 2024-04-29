@@ -13,6 +13,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -32,20 +33,26 @@ import androidx.compose.material.icons.outlined.Event
 import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LocalMinimumInteractiveComponentEnforcement
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.koin.getScreenModel
 import cafe.adriel.voyager.navigator.LocalNavigator
@@ -58,9 +65,9 @@ import lifeplan.composeapp.generated.resources.Res
 import lifeplan.composeapp.generated.resources.main_create_plan_success
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.stringResource
+import platform.coloredShadow
 import screen.detail.DetailScreen
 import theme.blue400
-import theme.titleFontColor
 import util.Direction
 import util.HorizontalLoadMorePager
 import util.forward
@@ -90,6 +97,9 @@ class MainScreen : Screen {
         }
 
         LaunchedEffect(LifePlanEvent.event) {
+            if (LifePlanEvent.event !is NoneLifePlanEvent)
+                LifePlanEvent.sendEvent(NoneLifePlanEvent)
+
             when (LifePlanEvent.event) {
                 is OnPlanCreateSuccess -> {
                     snackBarHostState?.showSnackbar(
@@ -98,9 +108,6 @@ class MainScreen : Screen {
                     )
                 }
             }
-
-            if (LifePlanEvent.event !is NoneLifePlanEvent)
-                LifePlanEvent.sendEvent(NoneLifePlanEvent)
         }
 
         MainScreenContent(
@@ -145,8 +152,6 @@ private fun MainScreenContent(
             updateSelectedDay = updateSelectedDay,
             selectedDay = selectedDay,
         )
-
-        Spacer(Modifier.height(20.dp))
 
         MainListContent(
             plans = planList,
@@ -238,17 +243,20 @@ private fun MainListContent(
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
+        verticalArrangement = Arrangement.spacedBy(28.dp),
+        contentPadding = PaddingValues(top = 20.dp, bottom = 20.dp)
     ) {
         items(
             items = plans,
             key = { plan -> plan.id }
         ) { plan ->
-            MainPlanCard(
-                modifier = Modifier.animateItemPlacement(),
-                plan = plan,
-                onNavigateDetailScreen = onNavigateDetailScreen
-            )
+            Column {
+                MainPlanCard(
+                    modifier = Modifier.animateItemPlacement(),
+                    plan = plan,
+                    onNavigateDetailScreen = onNavigateDetailScreen
+                )
+            }
         }
     }
 }
@@ -260,17 +268,19 @@ private fun MainPlanCard(
     onNavigateDetailScreen: (Long) -> Unit = {},
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth().height(68.dp)
+        modifier = Modifier.fillMaxWidth()
+            .wrapContentHeight()
             .padding(horizontal = 16.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .clickable { onNavigateDetailScreen(plan.id) }
-            .background(color = Color.White.copy(0.85F))
-            .border(
-                width = 0.5.dp,
-                color = Color.Gray.copy(0.1F),
-                shape = RoundedCornerShape(12.dp)
+            .coloredShadow(
+                color = Color.Black.copy(alpha = 0.2F),
+                borderRadius = 12.dp,
+                blurRadius = LocalDensity.current.run { 6.dp.toPx() },
+                spread = -5F,
             )
-            .padding(12.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(color = Color.White)
+            .clickable { onNavigateDetailScreen(plan.id) }
+            .padding(horizontal = 14.dp, vertical = 12.dp)
             .then(modifier),
         verticalArrangement = Arrangement.Center,
     ) {
@@ -278,22 +288,39 @@ private fun MainPlanCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(20.dp)
                     .border(2.dp, getPriorityColor(plan.priority).copy(alpha = 0.75F), CircleShape),
                 imageVector = Icons.Filled.Circle,
                 contentDescription = getPriorityName(plan.priority),
                 tint = getPriorityColor(plan.priority).copy(alpha = 0.25F)
             )
             Spacer(Modifier.width(6.dp))
-            Text(
-                text = plan.title,
-                fontSize = 15.sp,
-                color = titleFontColor,
-                maxLines = 1,
-            )
+            Row(
+                modifier = Modifier.padding(bottom = 2.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                Text(
+                    text = plan.title,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Proportional, LineHeightStyle.Trim.LastLineBottom)
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Spacer(Modifier.width(4.dp))
+                Text(
+                    text = plan.description,
+                    style = MaterialTheme.typography.titleSmall.copy(
+                        lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Proportional, LineHeightStyle.Trim.LastLineBottom)
+                    ),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.alpha(0.8F)
+                )
+            }
         }
 
-        Spacer(Modifier.height(6.dp))
+        Spacer(Modifier.height(8.dp))
 
         Row(
             verticalAlignment = Alignment.CenterVertically
@@ -304,7 +331,7 @@ private fun MainPlanCard(
                 else
                     Icons.Outlined.Flag,
                 contentDescription = null,
-                modifier = Modifier.size(14.dp)
+                modifier = Modifier.size(16.dp)
             )
             Spacer(Modifier.width(2.dp))
             Text(
@@ -314,22 +341,23 @@ private fun MainPlanCard(
                     else
                         get(0).substringAfter('-')
                 },
-                fontSize = 10.sp,
-                lineHeight = 14.sp,
+                style = MaterialTheme.typography.labelMedium,
             )
 
-            Slider(
-                modifier = Modifier,
-                value = plan.progress.toFloat(),
-                onValueChange = {},
-                enabled = false,
-                valueRange = 0F..100F,
-                colors = SliderDefaults.colors(
-                    inactiveTrackColor = Color.Gray.copy(0.25F),
-                    disabledActiveTrackColor = getProgressColor(plan.progress.toFloat())
-                ),
-                thumb = {},
-            )
+            CompositionLocalProvider(LocalMinimumInteractiveComponentEnforcement provides false) {
+                Slider(
+                    modifier = Modifier,
+                    value = plan.progress.toFloat(),
+                    onValueChange = {},
+                    enabled = false,
+                    valueRange = 0F..100F,
+                    colors = SliderDefaults.colors(
+                        inactiveTrackColor = Color.Gray.copy(0.25F),
+                        disabledActiveTrackColor = getProgressColor(plan.progress.toFloat())
+                    ),
+                    thumb = {},
+                )
+            }
         }
     }
 }

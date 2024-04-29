@@ -85,7 +85,7 @@ private fun LifePlanContent() {
                 },
                 scrollBehavior = topBarScrollBehavior,
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = blue50.copy(alpha = 0.75F)
+                    containerColor = blue50
                 )
             )
         },
@@ -97,7 +97,7 @@ private fun LifePlanContent() {
             Box(
                 Modifier.padding(paddingValues)
                     .fillMaxSize()
-                    .background(blue50.copy(alpha = 0.75F))
+                    .background(blue50)
             ) {
                 Navigator(screen = MainScreen()) { nav ->
                     navigator = nav

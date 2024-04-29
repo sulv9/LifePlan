@@ -105,6 +105,13 @@ private fun NewPlanScreenContent(
         onStartTimeUpdate = viewModel::updateStartTime,
         onEndTimeUpdate = viewModel::updateEndTime,
         onTimePickDialogDismiss = { viewModel.updateShowTimePickDialog(false) },
+        showRemindDateDialog = viewModel.showRemindDatePickDialog,
+        showRemindTimeDialog = viewModel.showRemindTimePickDialog,
+        remindDateTime = viewModel.remindDateTime,
+        onRemindTimeDialogConfirm = viewModel::updateRemindDateTime,
+        onRemindDateDialogDismiss = { viewModel.updateShowRemindDatePickDialog(false) },
+        onRemindTimeDialogShow = { viewModel.updateShowRemindTimePickDialog(true) },
+        onRemindTimeDialogDismiss = { viewModel.updateShowRemindTimePickDialog(false) },
     )
 
     PlanDetails(
@@ -139,6 +146,8 @@ private fun NewPlanScreenContent(
         },
         progress = viewModel.progress,
         onProgressChange = viewModel::updateProgress,
+        remindDateTime = viewModel.remindDateTime,
+        onRemindDateTimeClick = { viewModel.updateShowRemindDatePickDialog(true) },
         bottomButton = {
             Box(
                 modifier = Modifier.fillMaxWidth(),

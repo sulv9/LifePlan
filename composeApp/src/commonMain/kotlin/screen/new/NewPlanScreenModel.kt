@@ -10,9 +10,11 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import platform.remindTime
 import util.dateFormat
 import util.dateTimeFormat
 import util.millisToDateTime
+import util.parseDate2Millis
 import util.zeroTime
 
 class NewPlanScreenModel(
@@ -42,6 +44,9 @@ class NewPlanScreenModel(
     var endTime by mutableStateOf(-1L)
         private set
 
+    var remindDateTime by mutableStateOf("")
+        private set
+
     var titleInputError by mutableStateOf(false)
         private set
 
@@ -58,6 +63,12 @@ class NewPlanScreenModel(
         private set
 
     var showTimePickDialog by mutableStateOf(false)
+        private set
+
+    var showRemindDatePickDialog by mutableStateOf(false)
+        private set
+
+    var showRemindTimePickDialog by mutableStateOf(false)
         private set
 
     fun updatePlanTitle(title: String) {
@@ -87,6 +98,10 @@ class NewPlanScreenModel(
         endTime = time
     }
 
+    fun updateRemindDateTime(time: String) {
+        remindDateTime = time
+    }
+
     fun updatePriority(priority: Float) {
         this.priority = priority.toInt().toFloat()
     }
@@ -101,6 +116,14 @@ class NewPlanScreenModel(
 
     fun updateShowTimePickDialog(show: Boolean) {
         showTimePickDialog = show
+    }
+
+    fun updateShowRemindDatePickDialog(show: Boolean) {
+        showRemindDatePickDialog = show
+    }
+
+    fun updateShowRemindTimePickDialog(show: Boolean) {
+        showRemindTimePickDialog = show
     }
 
     fun createPlan() {
@@ -139,8 +162,12 @@ class NewPlanScreenModel(
             (if (endTime < 0) dateFormat else dateTimeFormat)
                 .format(millisToDateTime(endDate + endTime - if (startTime < 0) 0 else zeroTime)),
             priority.toLong(),
-            progress.toInt().toLong(), ""
+            progress.toInt().toLong(),
+            if (remindDateTime.isNotBlank()) "$remindDateTime:00" else ""
         )
+        if (remindDateTime.isNotBlank()) {
+            remindTime(title, desc, parseDate2Millis("$remindDateTime:00"))
+        }
         screenModelScope.launch {
             eventChannel.send(NewPlanEvent.CreatePlanSuccess)
         }

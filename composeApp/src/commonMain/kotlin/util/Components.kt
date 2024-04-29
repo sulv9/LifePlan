@@ -27,6 +27,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.OutlinedTextField
@@ -37,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerDefaults
+import androidx.compose.material3.TimePickerState
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -61,6 +63,7 @@ import lifeplan.composeapp.generated.resources.new_text_current_progress
 import lifeplan.composeapp.generated.resources.new_text_priority
 import lifeplan.composeapp.generated.resources.new_tip_end_date
 import lifeplan.composeapp.generated.resources.new_tip_end_time
+import lifeplan.composeapp.generated.resources.new_tip_remind_date_time
 import lifeplan.composeapp.generated.resources.new_tip_start_date
 import lifeplan.composeapp.generated.resources.new_tip_start_time
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -147,7 +150,7 @@ fun OutlinedTextFieldButton(
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DateTimeDialogShow(
     showDatePickDialog: Boolean = false,
@@ -163,6 +166,13 @@ fun DateTimeDialogShow(
     onStartTimeUpdate: (Long) -> Unit = {},
     onEndTimeUpdate: (Long) -> Unit = {},
     onTimePickDialogDismiss: () -> Unit = {},
+    showRemindDateDialog: Boolean = false,
+    showRemindTimeDialog: Boolean = false,
+    remindDateTime: String = "",
+    onRemindTimeDialogConfirm: (String) -> Unit = {},
+    onRemindDateDialogDismiss: () -> Unit = {},
+    onRemindTimeDialogShow: () -> Unit = {},
+    onRemindTimeDialogDismiss: () -> Unit = {},
 ) {
     if (showDatePickDialog) {
         val datePickerState = rememberDatePickerState()
@@ -173,45 +183,19 @@ fun DateTimeDialogShow(
             datePickerState.selectedDateMillis = endDate
         }
 
-        DatePickerDialog(
-            onDismissRequest = onDatePickDialogDismiss,
-            confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let {
-                        if (isShowStartDatePickDialog.value)
-                            onStartDateUpdate(it)
-                        else
-                            onEndDateUpdate(it)
-                    }
-                    onDatePickDialogDismiss()
-                }) {
-                    Text(
-                        stringResource(Res.string.new_dialog_ok),
-                        color = blue800
-                    )
+        DateDialog(
+            datePickerState = datePickerState,
+            onDatePickDialogDismiss = onDatePickDialogDismiss,
+            onConfirmClick = {
+                datePickerState.selectedDateMillis?.let {
+                    if (isShowStartDatePickDialog.value)
+                        onStartDateUpdate(it)
+                    else
+                        onEndDateUpdate(it)
                 }
-            },
-            dismissButton = {
-                TextButton(onClick = onDatePickDialogDismiss) {
-                    Text(
-                        stringResource(Res.string.new_dialog_cancel),
-                        color = blue800
-                    )
-                }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = blue50
-            )
-        ) {
-            DatePicker(
-                state = datePickerState,
-                colors = DatePickerDefaults.colors(
-                    todayContentColor = blue700,
-                    todayDateBorderColor = blue800,
-                    selectedDayContainerColor = blue800,
-                )
-            )
-        }
+                onDatePickDialogDismiss()
+            }
+        )
     }
 
     if (showTimePickDialog) {
@@ -228,50 +212,145 @@ fun DateTimeDialogShow(
             } else 0,
         )
 
-        DatePickerDialog(
-            onDismissRequest = onTimePickDialogDismiss,
-            confirmButton = {
-                TextButton(onClick = {
-                    val timeMillis = hour2Millis(timePickerState.hour) +
-                            min2Millis(timePickerState.minute)
-                    if (isShowStartDatePickDialog.value)
-                        onStartTimeUpdate(timeMillis)
-                    else
-                        onEndTimeUpdate(timeMillis)
-                    onTimePickDialogDismiss()
-                }) {
-                    Text(
-                        stringResource(Res.string.new_dialog_ok),
-                        color = blue800
-                    )
+        TimeDialog(
+            timePickerState = timePickerState,
+            onTimePickDialogDismiss = onTimePickDialogDismiss,
+            onConfirmClick = {
+                val timeMillis = hour2Millis(timePickerState.hour) +
+                        min2Millis(timePickerState.minute)
+                if (isShowStartDatePickDialog.value)
+                    onStartTimeUpdate(timeMillis)
+                else
+                    onEndTimeUpdate(timeMillis)
+                onTimePickDialogDismiss()
+            }
+        )
+    }
+
+    if (showRemindDateDialog) {
+        val datePickerState = rememberDatePickerState()
+        if (remindDateTime.isNotBlank())
+            datePickerState.selectedDateMillis = parseDate2Millis("$remindDateTime:00")
+        DateDialog(
+            datePickerState = datePickerState,
+            onDatePickDialogDismiss = onRemindDateDialogDismiss,
+            onConfirmClick = {
+                datePickerState.selectedDateMillis?.let {
+                    onRemindTimeDialogConfirm(dateFormat.format(millisToDateTime(it)))
+                    onRemindTimeDialogShow()
                 }
+                onRemindDateDialogDismiss()
+            }
+        )
+    }
+
+    if (showRemindTimeDialog) {
+        val timePickerState = rememberTimePickerState(
+            initialHour = remindDateTime.split(" ")
+                .run { if (size <= 1) 0 else get(1).split(":")[0].toInt() },
+            initialMinute = remindDateTime.split(" ")
+                .run { if (size <= 1) 0 else get(2).split(":")[0].toInt() },
+        )
+        TimeDialog(
+            timePickerState = timePickerState,
+            onTimePickDialogDismiss = {
+                onRemindTimeDialogDismiss()
+                onRemindTimeDialogConfirm("")
             },
-            dismissButton = {
-                TextButton(onClick = onTimePickDialogDismiss) {
-                    Text(
-                        stringResource(Res.string.new_dialog_cancel),
-                        color = blue800
-                    )
-                }
-            },
-            colors = DatePickerDefaults.colors(
-                containerColor = blue50
-            )
-        ) {
-            Box(
-                modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                TimePicker(
-                    state = timePickerState,
-                    colors = TimePickerDefaults.colors(
-                        clockDialColor = blue100,
-                        selectorColor = blue800,
-                        timeSelectorSelectedContainerColor = blue200,
-                        timeSelectorUnselectedContainerColor = blue100,
-                    )
+            onConfirmClick = {
+                val timeMillis = hour2Millis(timePickerState.hour) +
+                        min2Millis(timePickerState.minute)
+                onRemindTimeDialogConfirm(
+                    remindDateTime + " " + timeFormat.format(millisToDateTime(timeMillis - zeroTime))
+                )
+                onRemindTimeDialogDismiss()
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
+@Composable
+fun DateDialog(
+    datePickerState: DatePickerState,
+    onConfirmClick: () -> Unit = {},
+    onDatePickDialogDismiss: () -> Unit = {},
+) {
+    DatePickerDialog(
+        onDismissRequest = onDatePickDialogDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirmClick) {
+                Text(
+                    stringResource(Res.string.new_dialog_ok),
+                    color = blue800
                 )
             }
+        },
+        dismissButton = {
+            TextButton(onClick = onDatePickDialogDismiss) {
+                Text(
+                    stringResource(Res.string.new_dialog_cancel),
+                    color = blue800
+                )
+            }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = blue50
+        )
+    ) {
+        DatePicker(
+            state = datePickerState,
+            colors = DatePickerDefaults.colors(
+                todayContentColor = blue700,
+                todayDateBorderColor = blue800,
+                selectedDayContainerColor = blue800,
+            )
+        )
+    }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalResourceApi::class)
+fun TimeDialog(
+    timePickerState: TimePickerState,
+    onTimePickDialogDismiss: () -> Unit = {},
+    onConfirmClick: () -> Unit = {},
+) {
+    DatePickerDialog(
+        onDismissRequest = onTimePickDialogDismiss,
+        confirmButton = {
+            TextButton(onClick = onConfirmClick) {
+                Text(
+                    stringResource(Res.string.new_dialog_ok),
+                    color = blue800
+                )
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onTimePickDialogDismiss) {
+                Text(
+                    stringResource(Res.string.new_dialog_cancel),
+                    color = blue800
+                )
+            }
+        },
+        colors = DatePickerDefaults.colors(
+            containerColor = blue50
+        )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth().padding(top = 24.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            TimePicker(
+                state = timePickerState,
+                colors = TimePickerDefaults.colors(
+                    clockDialColor = blue100,
+                    selectorColor = blue800,
+                    timeSelectorSelectedContainerColor = blue200,
+                    timeSelectorUnselectedContainerColor = blue100,
+                )
+            )
         }
     }
 }
@@ -286,18 +365,20 @@ fun PlanDetails(
     onDescChange: (String) -> Unit = {},
     priority: Float = 0F,
     onPriorityChange: (Float) -> Unit = {},
-    startDate: Long = 0L,
+    startDate: Long = -1L,
     isStartDateError: Boolean = false,
     onStartDateClick: () -> Unit = {},
-    startTime: Long = 0L,
+    startTime: Long = -1L,
     onStartTimeClick: () -> Unit = {},
-    endDate: Long = 0L,
+    endDate: Long = -1L,
     isEndDateError: Boolean = false,
     onEndDateClick: () -> Unit = {},
-    endTime: Long = 0L,
+    endTime: Long = -1L,
     onEndTimeClick: () -> Unit = {},
     progress: Float = 0F,
     onProgressChange: (Float) -> Unit = {},
+    remindDateTime: String = "",
+    onRemindDateTimeClick: () -> Unit = {},
     bottomButton: @Composable (BoxWithConstraintsScope) -> Unit = {},
 ) {
     BoxWithConstraints {
@@ -441,6 +522,15 @@ fun PlanDetails(
                     }
                 )
             }
+
+            Spacer(Modifier.height(4.dp))
+
+            OutlinedTextFieldButton(
+                value = remindDateTime,
+                label = { Text(stringResource(Res.string.new_tip_remind_date_time)) },
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onRemindDateTimeClick
+            )
 
             Spacer(Modifier.height(24.dp))
 
